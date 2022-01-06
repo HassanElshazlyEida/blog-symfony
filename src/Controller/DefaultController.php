@@ -4,15 +4,18 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Services\GiftsService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 
 class DefaultController extends AbstractController
 {
-    public function __construct($logger)
+    protected $em;
+    public function __construct(EntityManagerInterface $em,$logger)
     {
+        $this->em=$em;
         // $logger->info("Binding Logger to controller");
     }
     /**
@@ -20,8 +23,20 @@ class DefaultController extends AbstractController
      */
     public function index(GiftsService $gifts,Request $request): Response
     {
+        // Raw sql
 
-        $users=$this->getDoctrine()->getRepository(User::class)->findAll();
+        $id=1;$max=4;
+        $sql="
+            SELECT * FROM user u
+            WHERE u.id > $id
+            LIMIT $max
+        ";
+        $stmt = $this->em->getConnection()->prepare($sql);
+        $users =  $stmt->executeQuery()->fetchAllAssociative();
+        
+        // Doctrine repository 
+
+        $users=$this->em->getRepository(User::class)->findBy([],[],4);
 
         $this->addFlash("Welcome","Welcome to Blog Page");
 
@@ -71,5 +86,26 @@ class DefaultController extends AbstractController
         return $this->render("default/popularPost.html.twig",[
             "posts"=>$posts
         ]);
+    }
+    /**
+     * @Route("show/{id}", name="show")
+     */
+    // Annotations for Controllers
+    public function show(User $user): Response
+    {
+        dd($user);
+    }
+    /**
+     * @Route("store/{email}", name="store")
+     */
+    public function store($email): Response
+    {
+       $user= new User();
+       $user->setName("Hassan");
+       $user->setEmail($email);
+      
+       $this->em->persist($user);
+       $this->em->flush();
+       dd($user);
     }
 }

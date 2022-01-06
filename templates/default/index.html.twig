@@ -10,11 +10,46 @@
 
 <div class="example-wrapper">
     <h1>Hello {{ controller_name }}! ✅</h1>
-
+   
     This friendly message is coming from:
     <ul>
         <li>Your controller at <code><a href="{{ '/home/hassan/Works/tests/blog-symfony/src/Controller/DefaultController.php'|file_link(0) }}">src/Controller/DefaultController.php</a></code></li>
         <li>Your template at <code><a href="{{ '/home/hassan/Works/tests/blog-symfony/templates/default/index.html.twig'|file_link(0) }}">templates/default/index.html.twig</a></code></li>
     </ul>
+
+    <!-- flashes -->
+
+    <h1>
+        {{ app.flashes('Welcome')[0] }}
+    </h1>
+
+    <!-- forloop -->
+    <ul>
+        {% for key,user in users %}
+            {{ user.email }} has won {{ gifts[key] }}
+            <br>
+        {% endfor %}
+    </ul>
+
+    <!-- set var -->
+    <p> Customers </p>
+    {% set customers=[{name:'kolama'},{name:'koky'}] %}
+
+    <!-- Global Variable -->
+
+    <p>{{ga_code}} </p>
+
+    <!-- App security-bundle-->
+
+    <p class="custom"> {{ app.request.get('param',none)}} </p>
+
+    <!-- Call controller view -->
+    {{
+        render(controller(
+            'App\\Controller\\DefaultController::PopularPost',
+            {'number':5}
+        ))
+    }}
+
 </div>
 {% endblock %}

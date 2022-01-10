@@ -24,7 +24,7 @@ class DefaultController extends AbstractController
     public function index(GiftsService $gifts,Request $request): Response
     {
         // Raw sql
-
+       
         $id=1;$max=4;
         $sql="
             SELECT * FROM user u
@@ -33,7 +33,7 @@ class DefaultController extends AbstractController
         ";
         $stmt = $this->em->getConnection()->prepare($sql);
         $users =  $stmt->executeQuery()->fetchAllAssociative();
-        
+        dump($users);
         // Doctrine repository 
 
         $users=$this->em->getRepository(User::class)->findBy([],[],4);

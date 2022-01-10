@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Events\VideoCreatedEvent;
 use App\Services\GiftsService;
 use App\Services\MyService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,13 +11,16 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DefaultController extends AbstractController
 {
     protected $em;
-    public function __construct(EntityManagerInterface $em,$logger)
+    public function __construct(EntityManagerInterface $em,$logger,EventDispatcherInterface $dispatcher)
     {
         $this->em=$em;
+        $this->dispatcher=$dispatcher;
         // $logger->info("Binding Logger to controller");
     }
     /**
@@ -107,5 +111,41 @@ class DefaultController extends AbstractController
        $this->em->persist($user);
        $this->em->flush();
        dd($user);
+    }
+    /**
+     * @Route("cache", name="cache")
+     */
+    public function cache(): Response
+    {
+        $cache= new FilesystemAdapter();
+
+        $posts=$cache->getItem("database.get_posts");
+
+        if(!$posts->isHit()){
+            $posts_db=['post 1', 'post 2', 'post 3'];
+            dump("connected with db ...");
+            $posts->set(serialize($posts_db));
+            $posts->expiresAfter(5);
+            $cache->save($posts);
+        }
+        // remove cache item
+        // $cache->deleteItem('database.get_posts');
+        // or all cache
+        // $cache->clear();
+        dd(unserialize($posts->get()));
+    }
+    /**
+     * @Route("event", name="event")
+     */
+    public function event()
+    {
+        $video= new \stdClass();
+        $video->title="movie";
+        $video->category="drama";
+        
+        $event=new VideoCreatedEvent($video);
+        //Event By Listeners (Services.yaml) And Subscribers
+        $this->dispatcher->dispatch($event,"video.created.event");
+        dd(1);
     }
 }

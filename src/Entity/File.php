@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\DiscriminatorColumn(name="type",type="string")
  * @ORM\DiscriminatorMap({"video" = "Video", "pdf" = "Pdf"})
  */
+// @ORM\InheritanceType("JOINED") it's better when we have many fields in our entities
 abstract class File
 {
     /**

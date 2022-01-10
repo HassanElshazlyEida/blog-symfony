@@ -1,0 +1,4 @@
+imports:
+    - { resouce: service.yaml}
+services:
+    App\Services\ServiceInterface:  '@App\Services\MySecondService'

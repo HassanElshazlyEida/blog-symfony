@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Services\GiftsService;
+use App\Services\MyService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,10 +22,9 @@ class DefaultController extends AbstractController
     /**
      * @Route("/default", name="default")
      */
-    public function index(GiftsService $gifts,Request $request): Response
+    public function index(GiftsService $gifts,Request $request,MyService $service): Response
     {
         // Raw sql
-       
         $id=1;$max=4;
         $sql="
             SELECT * FROM user u
@@ -35,7 +35,7 @@ class DefaultController extends AbstractController
         $users =  $stmt->executeQuery()->fetchAllAssociative();
         dump($users);
         // Doctrine repository 
-
+    
         $users=$this->em->getRepository(User::class)->findBy([],[],4);
 
         $this->addFlash("Welcome","Welcome to Blog Page");

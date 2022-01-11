@@ -3,16 +3,18 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Events\VideoCreatedEvent;
-use App\Services\GiftsService;
+use App\Entity\Video;
+use App\Form\VideoFormType;
 use App\Services\MyService;
+use App\Services\GiftsService;
+use App\Events\VideoCreatedEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class DefaultController extends AbstractController
 {
@@ -43,11 +45,36 @@ class DefaultController extends AbstractController
         $users=$this->em->getRepository(User::class)->findBy([],[],4);
 
         $this->addFlash("Welcome","Welcome to Blog Page");
+        // Form Section
+        $video = new Video();
+        $video->setCreatedAt(new \DateTime ('tomorrow'));
+        $form=$this->createForm(VideoFormType::class, $video);
+        $form->handleRequest($request);
+
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $file = $form->get('filename')->getData();
+            
+            $ext=$file->guessExtension();
+            $fileName = sha1(random_bytes(14)).'.'.$ext;
+            $file->move(
+                $this->getParameter('videos_directory'),
+                $fileName
+            );
+            $video->setFilename($fileName);
+            $video->setFormat($ext);
+
+            $this->em->persist($video);
+            $this->em->flush();
+            return $this->redirectToRoute("default");
+        }
 
         return $this->render('default/index.html.twig', [
             'controller_name' => 'DefaultController',
             'users'=>$users,
-            "gifts"=>$gifts->gifts
+            "gifts"=>$gifts->gifts,
+            "form"=> $form->createView()
         ]);
 
     }
@@ -148,4 +175,23 @@ class DefaultController extends AbstractController
         $this->dispatcher->dispatch($event,"video.created.event");
         dd(1);
     }
+    /**
+     * @Route("mail", name="mail")
+    */
+    public function mail(\Swift_Mailer $mailer):Response{
+
+        $message=(new \Swift_Message("Hello Email"))
+        ->setFrom('test@example.com')
+        ->setTo('recieve@example.com')
+        ->setBody(
+            $this->renderView(
+                'emails/registration.html.twig',
+                ['name' => "Hassan Elshazly"]
+            ),
+            'text/html'
+        );
+        $mailer->send($message);
+        return new Response("Email has been sent");
+    }
+
 }

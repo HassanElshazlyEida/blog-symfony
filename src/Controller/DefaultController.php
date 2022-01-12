@@ -6,6 +6,8 @@ use App\Entity\User;
 use App\Entity\Video;
 use App\Form\VideoFormType;
 use App\Services\MyService;
+use App\Entity\SecurityUser;
+use App\Form\RegisterUserType;
 use App\Services\GiftsService;
 use App\Events\VideoCreatedEvent;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,8 +15,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class DefaultController extends AbstractController
 {
@@ -41,7 +46,7 @@ class DefaultController extends AbstractController
         $users =  $stmt->executeQuery()->fetchAllAssociative();
         dump($users);
         // Doctrine repository 
-    
+       
         $users=$this->em->getRepository(User::class)->findBy([],[],4);
 
         $this->addFlash("Welcome","Welcome to Blog Page");
@@ -69,7 +74,7 @@ class DefaultController extends AbstractController
             $this->em->flush();
             return $this->redirectToRoute("default");
         }
-
+    
         return $this->render('default/index.html.twig', [
             'controller_name' => 'DefaultController',
             'users'=>$users,
@@ -120,11 +125,23 @@ class DefaultController extends AbstractController
     }
     /**
      * @Route("show/{id}", name="show")
+     * @Security("user.getId() === shownUser.getId()")
      */
     // Annotations for Controllers
-    public function show(User $user): Response
+    public function show(SecurityUser $shownUser): Response
     {
-        dd($user);
+        // dd($shownUser->setRoles(["ROLE_ADMIN"]));
+        //  $this->denyAccessUnlessGranted('ROLE_USER');
+        dd($shownUser);
+    }
+       /**
+     * @Route("showVideo/{id}", name="showVideo")
+     *
+     */
+    public function showVideo(Video $video): Response
+    {
+        $this->denyAccessUnlessGranted('VIDEO_VIEW',$video);
+        dd($video);
     }
     /**
      * @Route("store/{email}", name="store")
@@ -193,5 +210,48 @@ class DefaultController extends AbstractController
         $mailer->send($message);
         return new Response("Email has been sent");
     }
+    /**
+     * @Route("register", name="register")
+    */
+    public function register(Request $request,UserPasswordHasherInterface $passwordHasher){
 
+        $user = new SecurityUser();
+        $form = $this->createForm(RegisterUserType::class, $user);
+        $form->handleRequest ($request);
+        if ($form ->isSubmitted() && $form->isValid())
+        {
+            $user->setPassword(
+                $passwordHasher->hashPassword(
+                    $user,
+                    $form->get('password')->getData()
+                )
+            );
+            $user->setEmail($form->get('email')->getData());
+            $this->em->persist($user);
+            $this->em->flush();
+            return $this->redirectToRoute("register");
+        }
+        return $this->render('default/index.html.twig', [
+            'controller_name' => 'DefaultController',
+            'users'=>[],
+            "gifts"=> [],
+            "form"=> $form->createView()
+        ]);
+
+    }
+    /**
+     * @Route("login", name="login")
+    */
+    public function login(AuthenticationUtils $authenticationUtils){
+
+        $error =$authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+
+        return $this->render('security/login.html.twig', array(
+            'last_username'=>$lastUsername,
+            'error'=> $error,
+        )) ;
+
+    }
 }

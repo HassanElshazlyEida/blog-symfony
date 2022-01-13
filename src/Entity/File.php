@@ -46,6 +46,12 @@ abstract class File
      */
     private $author;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=SecurityUser::class, inversedBy="videos")
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     */
+    private $securityUser;
+    
     public function getId(): ?int
     {
         return $this->id;
@@ -95,6 +101,18 @@ abstract class File
     public function setAuthor(?Author $author): self
     {
         $this->author = $author;
+
+        return $this;
+    }
+
+    public function getSecurityUser(): ?SecurityUser
+    {
+        return $this->securityUser;
+    }
+
+    public function setSecurityUser(?SecurityUser $securityUser): self
+    {
+        $this->securityUser = $securityUser;
 
         return $this;
     }

@@ -48,10 +48,7 @@ class Video extends File
      */
     private $created_at;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=SecurityUser::class, inversedBy="videos")
-     */
-    private $securityUser;
+   
 
     public function getId(): ?int
     {
@@ -118,15 +115,5 @@ class Video extends File
         return $this;
     }
 
-    public function getSecurityUser(): ?SecurityUser
-    {
-        return $this->securityUser;
-    }
-
-    public function setSecurityUser(?SecurityUser $securityUser): self
-    {
-        $this->securityUser = $securityUser;
-
-        return $this;
-    }
+    
 }

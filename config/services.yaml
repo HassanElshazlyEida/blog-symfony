@@ -50,7 +50,12 @@ services:
     App\Listeners\VideoCreatedListener:
          tags:
             - {name : kernel.event_listener, event: video.created.event, method: OnVideoCreatedEvent}
-
+    
+    # LoginCredentialsTest:
+    #     class:  App\Tests\LoginCredentialsTest
+    #     arguments: ["@em","@encoder"]
+    #         # $em: '@Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface'
+    #         # $encoder: '@Doctrine\ORM\EntityManagerInterface'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

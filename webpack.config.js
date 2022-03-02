@@ -14,6 +14,7 @@ Encore
 
     .addEntry('js/custom', './build/js/custom.js')
     .addStyleEntry('css/custom','./build/css/custom.css')
+    .addStyleEntry('css/styles','./build/css/styles.css')
 
     // enables the Symfony UX Stimulus bridge (used in assets/bootstrap.js)
     .enableStimulusBridge('./assets/controllers.json')
